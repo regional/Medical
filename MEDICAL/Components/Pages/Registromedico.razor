@@ -1,0 +1,968 @@
+﻿@page "/Registromedico"
+@using System.Data
+@using System.Collections
+@using CAID.Data
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+
+
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<PageTitle>Profesionales - MEDICAL</PageTitle>
+
+<div class="d-flex align-items-center mb-4">
+    <h2 class="mb-1 fw-bold">
+        <i class="fas fa-user-md me-3"></i>
+        Gestión de Profesionales
+    </h2>
+    <p class="mb-0 opacity-75 ms-3">Sistema de administración de profesionales</p>
+</div>
+
+@if (pnlConsulta)
+{
+    <div class="card border-0 shadow-lg mb-4" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
+        <div class="card-header border-0 bg-transparent">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <button type="button" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_New">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Nuevo Profesional
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Show">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Actualizar
+                </button>
+                <div class="ms-auto">
+                    <span class="badge bg-info fs-6 rounded-pill px-3 py-2">
+                        <i class="fas fa-database me-2"></i>
+                        @(profesionalesData?.Rows.Count ?? 0) registros
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando profesionales...</p>
+                </div>
+            }
+            else if (profesionalesData == null || profesionalesData.Rows.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay profesionales registrados</h5>
+                    <p class="text-muted">Haga clic en "Nuevo Profesional" para agregar el primer registro</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="border-0 fw-bold ps-4">
+                                    <i class="fas fa-user-circle me-2"></i>Nombre Completo
+                                </th>
+                                <th class="border-0 fw-bold d-none d-md-table-cell">
+                                    <i class="fas fa-id-card me-2"></i>Tipo
+                                </th>
+                                <th class="border-0 fw-bold d-none d-md-table-cell">
+                                    <i class="fas fa-hospital me-2"></i>Especialidad
+                                </th>
+                                <th class="border-0 fw-bold d-none d-md-table-cell">
+                                    <i class="fas fa-clock me-2"></i>Tanda
+                                </th>
+                                <th class="border-0 fw-bold text-center" style="width: 120px;">
+                                    <i class="fas fa-cogs me-2"></i>Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                       
+                            @foreach (DataRow row in profesionalesData.Rows)
+                            {
+                                <tr class="hover-row">
+                                    <td class="ps-4">
+                                        <button type="button" class="btn btn-link text-decoration-none p-0 text-start fw-semibold hover-underline"
+                                                @onclick="@(() => _Select("Edit", row["ROWGUID"].ToString()))"
+                                                style="color: #495057;">
+                                            <i class="fas fa-user me-2 text-primary"></i>
+                                            @row["FULLNAME"]
+                                        </button>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 font-monospace">
+                                            @row["TIPONOMBRE"]
+                                        </span>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 font-monospace">
+                                            @row["ESPECIALIDAD"]
+                                        </span>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 font-monospace">
+                                            @row["TANDASTR"]
+                                        </span>
+                                    </td>
+                                     
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill hover-scale"
+                                                    title="Editar profesional"
+                                                    @onclick="@(() => _Select("Edit", row["ROWGUID"].ToString()))">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill hover-scale ms-1"
+                                                    title="Eliminar profesional"
+                                                    @onclick="@(() => _SelectDelete(row["ROWGUID"].ToString()))">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (pnlData)
+{
+    <div class="card border-0 shadow-lg" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
+        <div class="card-header border-0 bg-transparent">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <button type="button" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Save">
+                    <i class="fas fa-save me-2"></i>
+                    Guardar
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Cancel">
+                    <i class="fas fa-eraser me-2"></i>
+                    Limpiar
+                </button>
+                <button type="button" class="btn btn-outline-dark btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Back">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Regresar
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    <div class="mb-4">
+                        <h4 class="fw-bold text-primary mb-1">
+                            <i class="fas fa-edit me-2"></i>
+                            @(string.IsNullOrEmpty(xGUID) || xGUID == Guid.Empty.ToString() ? "Nuevo Profesional" : "Editar Profesional")
+                        </h4>
+                        <p class="text-muted mb-0">Complete la información del profesional</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtIdLocal" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2 @(string.IsNullOrWhiteSpace(txtIdLocal) && showValidation ? "is-invalid" : "")"
+                               id="txtIdLocal"
+                               placeholder="Codigo"
+                               style="border-radius: 15px;"
+                               enable="@(string.IsNullOrEmpty(xGUID) || xGUID == Guid.Empty.ToString() ? true : true)">
+                        <label for="txtIdLocal" class="text-primary fw-semibold">
+                            <i class="fas fa-id-badge me-2"></i>Código *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(txtIdLocal) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>El código es requerido
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtNombre1" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2 @(string.IsNullOrWhiteSpace(txtNombre1) && showValidation ? "is-invalid" : "")"
+                               id="txtNombre1"
+                               placeholder="Primer Nombre"
+                               style="border-radius: 15px;">
+                        <label for="txtNombre1" class="text-primary fw-semibold">
+                            <i class="fas fa-user-plus me-2"></i>Primer Nombre *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(txtNombre1) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>El primer nombre es requerido
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtNombre2" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2"
+                               id="txtNombre2"
+                               placeholder="Segundo Nombre"
+                               style="border-radius: 15px;">
+                        <label for="txtNombre2" class="text-primary fw-semibold">
+                            <i class="fas fa-user-plus me-2"></i>Segundo Nombre
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtApodo" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2"
+                               id="txtApodo"
+                               placeholder="Apodo"
+                               style="border-radius: 15px;">
+                        <label for="txtApodo" class="text-primary fw-semibold">
+                            <i class="fas fa-user-plus me-2"></i>Apodo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtApellido1" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2 @(string.IsNullOrWhiteSpace(txtApellido1) && showValidation ? "is-invalid" : "")"
+                               id="txtApellido1"
+                               placeholder="Primer Apellido"
+                               style="border-radius: 15px;">
+                        <label for="txtApellido1" class="text-primary fw-semibold">
+                            <i class="fas fa-user-tag me-2"></i>Primer Apellido *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(txtApellido1) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>El primer apellido es requerido
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtApellido2" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2"
+                               id="txtApellido2"
+                               placeholder="Segundo Apellido"
+                               style="border-radius: 15px;">
+                        <label for="txtApellido2" class="text-primary fw-semibold">
+                            <i class="fas fa-user-tag me-2"></i>Segundo Apellido
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtCedula" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2 @(string.IsNullOrWhiteSpace(txtCedula) && showValidation ? "is-invalid" : "")"
+                               id="txtCedula"
+                               placeholder="Cedula"
+                               style="border-radius: 15px;">
+                        <label for="txtCedula" class="text-primary fw-semibold">
+                            <i class="fas fa-id-badge me-2"></i>Cédula *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(txtCedula) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>La cédula es requerida
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtNSS" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2"
+                               id="txtNSS"
+                               placeholder="No Seguridad Social"
+                               style="border-radius: 15px;">
+                        <label for="txtNSS" class="text-primary fw-semibold">
+                            <i class="fas fa-shield-alt me-2"></i>No. Seguridad Social
+                        </label>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtPasaporte" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2"
+                               id="txtPasaporte"
+                               placeholder="Pasaporte"
+                               style="border-radius: 15px;">
+                        <label for="txtPasaporte" class="text-primary fw-semibold">
+                            <i class="fas fa-passport me-2"></i>Pasaporte
+                        </label>
+                    </div>
+                </div>
+
+
+           
+
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <input @bind="txtFechaNace" @bind:event="oninput"
+                               type="text"
+                               class="form-control form-control-lg border-2 @(string.IsNullOrWhiteSpace(txtFechaNace) && showValidation ? "is-invalid" : "") datepicker"
+                               id="txtFechaNace"
+                               placeholder="mm/dd/aaaa"
+                               style="border-radius: 15px;">
+                        <label for="txtFechaNace" class="text-primary fw-semibold">
+                            <i class="fas fa-calendar-alt me-2"></i>Fecha de Nacimiento *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(txtFechaNace) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>La fecha de nacimiento es requerida
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <select @bind="cmbClaseId"
+                                class="form-select form-select-lg border-2 @(string.IsNullOrWhiteSpace(cmbClaseId) && showValidation ? "is-invalid" : "")"
+                                id="cmbClaseId"
+                                style="border-radius: 15px;"
+                                enable="@(string.IsNullOrEmpty(xGUID) || xGUID == Guid.Empty.ToString() ? false : true)">
+                            <option value="">-- SELECCIONE --</option>
+                            <option value="1">MEDICOS</option>
+                            <option value="2">TERAPISTAS</option>
+                            <option value="3">ENFERMERAS</option>
+                            <option value="4">AGENTE SOCIAL</option>
+                        </select>
+                        <label for="cmbClaseId" class="text-primary fw-semibold">
+                            <i class="fas fa-medkit me-2"></i>Clase Profesional *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(cmbClaseId) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>La clase profesional es requerida
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <select @bind="cmbEspMed"
+                                class="form-select form-select-lg border-2 @(string.IsNullOrWhiteSpace(cmbEspMed) && showValidation ? "is-invalid" : "")"
+                                id="cmbEspMed"
+                                style="border-radius: 15px;">
+                            <option value="">-- SELECCIONE --</option>
+                            @if (especialidadesData != null)
+                            {
+                                @foreach (DataRow row in especialidadesData.Rows)
+                                {
+                                    <option value="@row["ROWGUID"]">@row["NOMBRE"]</option>
+                                }
+                            }
+                        </select>
+                        <label for="cmbEspMed" class="text-primary fw-semibold">
+                            <i class="fas fa-stethoscope me-2"></i>Especialidad *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(cmbEspMed) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>La especialidad es requerida
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-floating mb-3">
+                        <select @bind="cmbTanda"
+                                class="form-select form-select-lg border-2 @(string.IsNullOrWhiteSpace(cmbTanda) && showValidation ? "is-invalid" : "")"
+                                id="cmbTanda"
+                                style="border-radius: 15px;">
+                            <option value="">-- SELECCIONE --</option>
+                            <option value="1">MAÑANA</option>
+                            <option value="2">TARDE</option>
+                            <option value="3">COMPLETA</option>
+                        </select>
+                        <label for="cmbTanda" class="text-primary fw-semibold">
+                            <i class="fas fa-hourglass-half me-2"></i>Tanda *
+                        </label>
+                        @if (string.IsNullOrWhiteSpace(cmbTanda) && showValidation)
+                        {
+                            <div class="invalid-feedback fw-semibold">
+                                <i class="fas fa-exclamation-circle me-1"></i>La tanda es requerida
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>
+                <span id="successMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+
+    .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+        .hover-scale:hover {
+            transform: scale(1.1);
+        }
+
+    .hover-underline {
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .hover-underline:hover {
+            color: #0d6efd !important;
+        }
+
+        .hover-underline:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #0d6efd;
+            transition: width 0.3s ease;
+        }
+
+        .hover-underline:hover:after {
+            width: 100%;
+        }
+
+    .hover-row {
+        transition: all 0.3s ease;
+    }
+
+        .hover-row:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            transform: translateX(5px);
+        }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: #0d6efd !important;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+
+    .card {
+        border-radius: 20px !important;
+    }
+
+    .btn {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .table thead th {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+</style>
+
+@code {
+    private ArrayList xQueryParameters = new ArrayList();
+    private ArrayList xQueryValues = new ArrayList();
+    private string xCommand = string.Empty;
+    private string xQuery = string.Empty;
+    private string xGUID = string.Empty;
+
+    private bool pnlConsulta = true;
+    private bool pnlData = false;
+    private string txtIdLocal = string.Empty;
+    private string txtNombre1 = string.Empty;
+    private string txtNombre2 = string.Empty;
+    private string txtApellido1 = string.Empty;
+    private string txtApellido2 = string.Empty;
+    private string txtApodo = string.Empty;
+    private string txtNSS = string.Empty;
+    private string txtCedula = string.Empty;
+    private string txtPasaporte = string.Empty;
+    private string txtFechaNace = string.Empty;
+    private string cmbClaseId = string.Empty;
+    private string cmbEspMed = string.Empty;
+    private string cmbTanda = string.Empty;
+    private bool isLoading = false;
+    private bool showValidation = false;
+    private DataTable profesionalesData;
+    private DataTable especialidadesData;
+
+    private string xBase => "SMX00300";
+    private string PROFESIONALID => txtIdLocal?.Trim().ToUpper() ?? string.Empty;
+    private string NOMBRE1 => txtNombre1?.Trim().ToUpper() ?? string.Empty;
+    private string NOMBRE2 => txtNombre2?.Trim().ToUpper() ?? string.Empty;
+    private string APELLIDO1 => txtApellido1?.Trim().ToUpper() ?? string.Empty;
+    private string APELLIDO2 => txtApellido2?.Trim().ToUpper() ?? string.Empty;
+    private string APODO => txtApodo?.Trim().ToUpper() ?? string.Empty;
+    private string FNACE => txtFechaNace ?? string.Empty;
+    private string ESPECIALIDADID => cmbEspMed?.Trim().ToUpper() ?? string.Empty;
+    private string NSSID => txtNSS?.Trim().ToUpper() ?? string.Empty;
+    private string CEDULAID => txtCedula?.Trim().ToUpper() ?? string.Empty;
+    private string PASAPORTEID => txtPasaporte?.Trim().ToUpper() ?? string.Empty;
+    private int CLASEID => string.IsNullOrWhiteSpace(cmbClaseId) ? 0 : Convert.ToInt32(cmbClaseId);
+    private int TANDA => string.IsNullOrWhiteSpace(cmbTanda) ? 0 : Convert.ToInt32(cmbTanda);
+    private string ROWGUID => xGUID?.ToUpper() ?? string.Empty;
+    private string ROWUSERID => GetSessionValue("CURRENTUSR_ID");
+    private string ROWSGXID => GetSessionValue("CURRENTUSR_SGXID");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ValidateSession();
+        xGUID = Guid.NewGuid().ToString().ToUpper();
+        await _Iniciar();
+        await _Show(); // Agregado para que la tabla se cargue al iniciar
+    }
+
+    private async Task ValidateSession()
+    {
+        if (string.IsNullOrEmpty(GetSessionValue("CURRENTUSR_ID")))
+        {
+            await ShowErrorToast("Sesión no válida. Redirigiendo al login...");
+            // Navigation.NavigateTo("/login", true);
+            return;
+        }
+    }
+
+    private async Task _Iniciar()
+    {
+        await LoadEspecialidades();
+        string queryX = GetQueryParameter("X");
+        if (queryX == null)
+        {
+            xGUID = Guid.NewGuid().ToString().ToUpper();
+            pnlConsulta = true;
+            pnlData = false;
+            profesionalesData = null;
+            _IniciarControles();
+        }
+        else
+        {
+            await LoadProfessionalForEdit(queryX);
+        }
+    }
+
+    private async Task LoadEspecialidades()
+    {
+        try
+        {
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@NOMBRE");
+            xQueryValues.Add("%");
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            especialidadesData = DB.ExecuteAdapter("SMX30013S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al cargar especialidades: {ex.Message}");
+        }
+    }
+
+    private async Task LoadProfessionalForEdit(string guid)
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            xGUID = guid;
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@GUID");
+            xQueryValues.Add(ROWGUID);
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQuery = xBase + "S2";
+            DataTable dataTable = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+            DataRow dataRow = dataTable.Rows.Count != 0 ? dataTable.Rows[0] : null;
+
+            if (dataRow != null)
+            {
+                txtIdLocal = dataRow["PROFESIONALID"].ToString();
+                txtNombre1 = dataRow["NOMBRE1"].ToString();
+                txtNombre2 = dataRow["NOMBRE2"].ToString();
+                txtApellido1 = dataRow["APELLIDO1"].ToString();
+                txtApellido2 = dataRow["APELLIDO2"].ToString();
+                txtApodo = dataRow["APODO"].ToString();
+                cmbClaseId = dataRow["CLASEID"].ToString();
+                txtNSS = dataRow["NSSID"].ToString();
+                txtCedula = dataRow["CEDULAID"].ToString();
+                txtPasaporte = dataRow["PASAPORTEID"].ToString();
+                txtFechaNace = Convert.ToDateTime(dataRow["FNACE"].ToString()).ToString("MM/dd/yyyy");
+                cmbEspMed = dataRow["ESPECIALIDADID"].ToString();
+                cmbTanda = dataRow["TANDA"].ToString();
+                pnlConsulta = false;
+                pnlData = true;
+                showValidation = false;
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void _IniciarControles()
+    {
+        txtIdLocal = string.Empty;
+        txtNombre1 = string.Empty;
+        txtNombre2 = string.Empty;
+        txtApellido1 = string.Empty;
+        txtApellido2 = string.Empty;
+        txtApodo = string.Empty;
+        cmbClaseId = string.Empty;
+        txtNSS = string.Empty;
+        txtCedula = string.Empty;
+        txtPasaporte = string.Empty;
+        cmbTanda = string.Empty;
+        txtFechaNace = string.Empty;
+        cmbEspMed = string.Empty;
+        showValidation = false;
+    }
+
+    private async Task _IniciarFormulario()
+    {
+        xGUID = Guid.NewGuid().ToString().ToUpper();
+        _IniciarControles();
+        pnlConsulta = true;
+        pnlData = false;
+        await _Show();
+    }
+
+    protected async Task _New()
+    {
+        _IniciarControles();
+        xGUID = Guid.NewGuid().ToString().ToUpper();
+        pnlConsulta = false;
+        pnlData = true;
+        StateHasChanged();
+    }
+
+    protected async Task _Show()
+    {
+        try
+        {
+            isLoading = true;
+            pnlConsulta = true;
+            pnlData = false;
+            StateHasChanged();
+            await Task.Delay(300);
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@NOMBRE");
+            xQueryValues.Add("%");
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQuery = xBase + "S1medico";
+            profesionalesData = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al cargar profesionales: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    protected async Task _Select(string command, string commandArgument)
+    {
+        xCommand = command;
+        xGUID = commandArgument;
+        try
+        {
+            if (xCommand == "Edit")
+            {
+                await LoadEditData();
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error: {ex.Message}");
+        }
+    }
+
+    protected async Task _SelectDelete(string commandArgument)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "⚠️ ¿Está seguro que desea eliminar este profesional?\n\nEsta acción no se puede deshacer.");
+        if (!confirmed) return;
+        xCommand = "Delete";
+        xGUID = commandArgument;
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@ROWGUID");
+            xQueryValues.Add(ROWGUID);
+            xQueryParameters.Add("@ROWUSERID");
+            xQueryValues.Add(ROWUSERID);
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQuery = xBase + "SD";
+            if (DB.ExecuteNonQuery(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure))
+            {
+                await ShowSuccessToast("Profesional eliminado exitosamente");
+                await _Show();
+            }
+            else
+            {
+                await ShowErrorToast("No se pudo eliminar el profesional");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al eliminar: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadEditData()
+    {
+        try
+        {
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@GUID");
+            xQueryValues.Add(ROWGUID);
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQuery = xBase + "S2";
+            DataTable dataTable = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+            if (dataTable.Rows.Count > 0)
+            {
+                DataRow row = dataTable.Rows[0];
+                txtIdLocal = row["PROFESIONALID"].ToString();
+                txtNombre1 = row["NOMBRE1"].ToString();
+                txtNombre2 = row["NOMBRE2"].ToString();
+                txtApellido1 = row["APELLIDO1"].ToString();
+                txtApellido2 = row["APELLIDO2"].ToString();
+                txtApodo = row["APODO"].ToString();
+                txtNSS = row["NSSID"].ToString();
+                txtCedula = row["CEDULAID"].ToString();
+                txtPasaporte = row["PASAPORTEID"].ToString();
+                txtFechaNace = Convert.ToDateTime(row["FNACE"].ToString()).ToString("MM/dd/yyyy");
+                cmbClaseId = row["CLASEID"].ToString();
+                cmbEspMed = row["ESPECIALIDADID"].ToString();
+                cmbTanda = row["TANDA"].ToString();
+                pnlConsulta = false;
+                pnlData = true;
+                showValidation = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al cargar datos: {ex.Message}");
+        }
+    }
+
+    protected async Task _Save()
+    {
+        showValidation = true;
+        if (string.IsNullOrWhiteSpace(txtIdLocal) || string.IsNullOrWhiteSpace(txtNombre1) || string.IsNullOrWhiteSpace(txtApellido1) || string.IsNullOrWhiteSpace(txtCedula) || string.IsNullOrWhiteSpace(txtFechaNace) || string.IsNullOrWhiteSpace(cmbClaseId) || string.IsNullOrWhiteSpace(cmbEspMed) || string.IsNullOrWhiteSpace(cmbTanda))
+        {
+            await ShowErrorToast("Por favor complete todos los campos requeridos");
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            string[] strArray = FNACE.Split('/');
+            DateTime dateTime = new DateTime(Convert.ToInt32(strArray[2]), Convert.ToInt32(strArray[0]), Convert.ToInt32(strArray[1]));
+            xQueryParameters.Add("@PROFESIONALID");
+            xQueryValues.Add(PROFESIONALID);
+            xQueryParameters.Add("@NOMBRE1");
+            xQueryValues.Add(NOMBRE1);
+            xQueryParameters.Add("@NOMBRE2");
+            xQueryValues.Add(NOMBRE2);
+            xQueryParameters.Add("@APELLIDO1");
+            xQueryValues.Add(APELLIDO1);
+            xQueryParameters.Add("@APELLIDO2");
+            xQueryValues.Add(APELLIDO2);
+            xQueryParameters.Add("@APODO");
+            xQueryValues.Add(APODO);
+            xQueryParameters.Add("@FNACE");
+            xQueryValues.Add(dateTime.ToString("MM/dd/yyyy"));
+            xQueryParameters.Add("@ESPECIALIDADID");
+            xQueryValues.Add(ESPECIALIDADID);
+            xQueryParameters.Add("@CLASEID");
+            xQueryValues.Add(CLASEID);
+            xQueryParameters.Add("@CEDULAID");
+            xQueryValues.Add(CEDULAID);
+            xQueryParameters.Add("@NSSID");
+            xQueryValues.Add(NSSID);
+            xQueryParameters.Add("@PASAPORTEID");
+            xQueryValues.Add(PASAPORTEID);
+            xQueryParameters.Add("@ROWGUID");
+            xQueryValues.Add(ROWGUID);
+            xQueryParameters.Add("@ROWUSERID");
+            xQueryValues.Add(ROWUSERID);
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQueryParameters.Add("@TANDA");
+            xQueryValues.Add(TANDA);
+            xQuery = xBase + "SImedico";
+            if (DB.ExecuteNonQuery(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure))
+            {
+                await ShowSuccessToast("Profesional guardado exitosamente");
+                await Task.Delay(1500);
+                await _IniciarFormulario();
+            }
+            else
+            {
+                await ShowErrorToast("No se pudo guardar el profesional");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al guardar: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    protected void _Cancel()
+    {
+        _IniciarControles();
+        StateHasChanged();
+    }
+
+    protected async Task _Back()
+    {
+        await _IniciarFormulario();
+    }
+
+    private async Task ShowSuccessToast(string message)
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $@"
+            document.getElementById('successMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('successToast')).show();
+        ");
+    }
+
+    private async Task ShowErrorToast(string message)
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $@"
+            document.getElementById('errorMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('errorToast')).show();
+        ");
+    }
+
+    private string GetSessionValue(string key)
+    {
+        try
+        {
+            return HttpContextAccessor?.HttpContext?.Session?.GetString(key) ?? key switch
+            {
+                "CURRENTUSR_ID" => "USER123",
+                "CURRENTUSR_SGXID" => "SGX001",
+                _ => string.Empty
+            };
+        }
+        catch
+        {
+            return key switch
+            {
+                "CURRENTUSR_ID" => "USER123",
+                "CURRENTUSR_SGXID" => "SGX001",
+                _ => string.Empty
+            };
+        }
+    }
+
+    private string GetQueryParameter(string name)
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            return query[name];
+        }
+        catch
+        {
+            return null;
+        }
+    }
+}

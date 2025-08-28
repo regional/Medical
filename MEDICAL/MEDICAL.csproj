@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-MEDICAL-e83d58dd-0312-4194-abfd-06d470697ffa</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\plugins\.DS_Store" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.13.1" />
+    <PackageReference Include="SqlConnection" Version="1.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Net.Security" Version="4.3.2" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CAID">
+      <HintPath>F:\New folder\New folder\ES_SIGES_CAID\bin\Debug\CAID.dll</HintPath>
+    </Reference>
+    <Reference Include="CAID.Data">
+      <HintPath>..\..\..\Desktop\codigo aspx\login\bin\CAID.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="CAID.Entity">
+      <HintPath>..\..\..\Desktop\codigo aspx\login\bin\CAID.Entity.dll</HintPath>
+    </Reference>
+    <Reference Include="LoanLite.Data">
+      <HintPath>..\..\..\Desktop\CAID\CAID\bin\LoanLite.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>..\..\..\Desktop\codigo aspx\login\bin\System.Web.Optimization.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

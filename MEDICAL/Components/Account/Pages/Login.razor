@@ -1,0 +1,455 @@
+﻿@page "/Account/Login"
+@page "/login"
+@rendermode RenderMode.InteractiveServer
+@layout EmptyLayout
+
+@using System.Collections
+@using System.Data
+@using System.ComponentModel.DataAnnotations
+@using CAID.Data
+@using CAID.Entity
+@using MEDICAL.Services
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject CurrentUserService CurrentUserService
+
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - MEDICAL System</title>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23667eea"/><stop offset="100%" stop-color="%23764ba2"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23a)"/></svg>');
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 90%;
+            min-height: 500px;
+            display: flex;
+        }
+
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .login-left::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+                animation: float 20s infinite linear;
+                pointer-events: none;
+            }
+
+       
+
+        {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+
+        }
+
+        .login-right {
+            padding: 3rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .system-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .system-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .features {
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+
+        .login-form-container {
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+            }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        
+
+        {
+            flex-direction: column;
+            margin: 1rem;
+        }
+
+        .login-left {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .system-title {
+            font-size: 2rem;
+        }
+
+        .features {
+            display: none;
+        }
+
+        }
+    </style>
+</head>
+
+
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card mt-5">
+                    <div class="card-body">
+                        <div class="text-center">
+                            <img src="https://ux-static.medicar.org/images/favicon.ico" alt="Medical LOGO" style="width: 50px; height: 50px;" />
+                        </div>
+                        <h3 class="text-center">🔒</h3>
+                    <h5 class="text-center">Sistema de Gestión de Citas de Especialidades Médicas centrado en HCI</h5>
+
+                        <EditForm Model="@loginModel" FormName="loginForm" OnValidSubmit="@HandleLogin">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger" role="alert">@errorMessage</div>
+                            }
+
+                            <div class="form-group mb-3">
+                                <label for="cmbEmpresa">Empresa <span style="color: red;">*</span></label>
+                                <InputSelect id="cmbEmpresa" @bind-Value="loginModel.Empresa" class="form-control">
+                                    @if (Empresas.Any())
+                                    {
+                                        @foreach (var empresa in Empresas)
+                                        {
+                                            <option value="@empresa.Value">@empresa.Text</option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="" disabled>No companies available</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => loginModel.Empresa)" />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="txtUsuario">User ID <span style="color: red;">*</span></label>
+                                <InputText id="txtUsuario" @bind-Value="loginModel.Usuario" class="form-control" />
+                                <ValidationMessage For="@(() => loginModel.Usuario)" />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="txtClave">Password <span style="color: red;">*</span></label>
+                                <InputText id="txtClave" @bind-Value="loginModel.Clave" type="password" class="form-control" />
+                                <ValidationMessage For="@(() => loginModel.Clave)" />
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <InputCheckbox id="remember" @bind-Value="loginModel.Remember" class="form-check-input" />
+                                <label for="remember" class="form-check-label">Remember user ID</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+                        <div class="text-center my-2">
+
+                            <span>CAPTCHA</span>
+                        </div>
+                            <div class="text-center my-2">
+
+                                <span>OR</span>
+                            </div>
+                            <div class="text-center mb-2">
+                                <button class="btn btn-outline-secondary btn-block" @onclick="GoogleLogin">Continuar con Google</button>
+                            </div>
+                            <div class="text-center">
+                                <a href="/Account/ForgotPassword">Need help signing in?</a>
+                            </div>
+                            <div class="text-center mt-2">
+                                <span>New user? <a href="/Account/Register">Get started</a></span>
+                            </div>
+                        </EditForm>
+                    </div>
+                    <div class="card-footer text-center">
+                        Copyright © 2024-2025 Medical.APP, Inc. All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@code {
+    private string? errorMessage;
+    private LoginModel loginModel = new LoginModel();
+    private List<ListItem> Empresas = new List<ListItem>();
+
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "Empresa is required.")]
+        public string? Empresa { get; set; }
+
+        [Required(ErrorMessage = "User ID is required.")]
+        public string? Usuario { get; set; }
+
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
+        public string? Clave { get; set; }
+
+        public bool Remember { get; set; }
+    }
+
+    private class ListItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ArrayList xQueryParameters = new ArrayList();
+            ArrayList xQueryValues = new ArrayList();
+            xQueryParameters.Add("@NOMBRE");
+            xQueryValues.Add("%");
+
+            var dataTable = DB.ExecuteAdapter("SGX00000S3", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+            foreach (DataRow row in dataTable.Rows)
+            {
+                Empresas.Add(new ListItem { Text = row["NOMBRE"].ToString() ?? string.Empty, Value = row["ROWGUID"].ToString() ?? string.Empty });
+            }
+            if (Empresas.Any() && string.IsNullOrEmpty(loginModel.Empresa))
+            {
+                loginModel.Empresa = Empresas[0].Value; // Default to first company
+            }
+            Console.WriteLine($"OnInitializedAsync: Empresas loaded, count={Empresas.Count}, default Empresa={loginModel.Empresa}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading companies. Please contact support.";
+            await JSRuntime.InvokeVoidAsync("toast", new { message = errorMessage });
+            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        Console.WriteLine("HandleLogin started");
+        errorMessage = string.Empty;
+
+        Console.WriteLine($"Before validation: Empresa={loginModel.Empresa}, Usuario={loginModel.Usuario}, Clave={loginModel.Clave}");
+
+        if (string.IsNullOrEmpty(loginModel.Empresa) || !Empresas.Any(e => e.Value == loginModel.Empresa))
+        {
+            errorMessage = "Please select a valid company.";
+            await JSRuntime.InvokeVoidAsync("toast", new { message = errorMessage });
+            Console.WriteLine("Validation failed: Empresa is invalid");
+            return;
+        }
+
+        try
+        {
+            string str1 = loginModel.Empresa.Trim();
+            string str2 = loginModel.Usuario.Trim();
+            string str3 = Functions._fnEncryptStr(loginModel.Clave.Trim());
+
+            Console.WriteLine($"Login attempt: Empresa={str1}, User={str2}, Encrypted Password={str3}");
+
+            ArrayList xQueryParameters = new ArrayList();
+            ArrayList xQueryValues = new ArrayList();
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(str1);
+            xQueryParameters.Add("@USR");
+            xQueryValues.Add(str2);
+            xQueryParameters.Add("@PWRD");
+            xQueryValues.Add(str3);
+
+            string xQuery = "SGX00100S3";
+            DataTable dataTable1 = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+
+            Console.WriteLine($"SGX00100S3 returned {dataTable1.Rows.Count} rows");
+            if (dataTable1.Rows.Count > 0)
+            {
+                DataRow row1 = dataTable1.Rows[0];
+                CurrentUserService.ID = row1["ROWGUID"].ToString();
+                CurrentUserService.SGXID = row1["ROWSGXID"].ToString();
+                CurrentUserService.Nombre = row1["NOMBRE"].ToString();
+                CurrentUserService.Login = row1["USR"].ToString();
+                CurrentUserService.Password = row1["PWRD"].ToString();
+                CurrentUserService.CompGUID = row1["ROWSGXID"].ToString();
+                CurrentUserService.UserNumero = row1["ROWGUID"].ToString();
+                CurrentUserService.UserImgUrl = row1["ROWGUID"].ToString();
+                CurrentUserService.UserAsociado = row1["ROWGUID"].ToString();
+                CurrentUserService.Html = row1["ROWGUID"].ToString();
+                CurrentUserService.RoleGUID = row1["ROLID"].ToString();
+                CurrentUserService.RoleNombre = row1["ROLID"].ToString();
+                CurrentUserService.TerID = row1["TERID"].ToString();
+
+                CURRENTUSR.ID = row1["ROWGUID"].ToString();
+                CURRENTUSR.SGXID = row1["ROWSGXID"].ToString();
+
+                xQueryParameters.Clear();
+                xQueryValues.Clear();
+                xQueryParameters.Add("@GUID");
+                xQueryValues.Add(row1["ROLID"].ToString());
+                xQueryParameters.Add("@ROWSGXID");
+                xQueryValues.Add(str1);
+                xQuery = "SGX00002S2";
+                DataTable dataTable2 = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+
+                if (dataTable2.Rows.Count > 0)
+                {
+                    DataRow row2 = dataTable2.Rows[0];
+                    CurrentUserService.CanRead = Convert.ToBoolean(row2["ROLLEER"].ToString());
+                    CurrentUserService.CanCreate = Convert.ToBoolean(row2["ROLCREAR"].ToString());
+                    CurrentUserService.CanModify = Convert.ToBoolean(row2["ROLMODIFICAR"].ToString());
+                    CurrentUserService.CanPrint = Convert.ToBoolean(row2["ROLIMPRIMIR"].ToString());
+                    CurrentUserService.CanDelete = Convert.ToBoolean(row2["ROLELIMINAR"].ToString());
+                    CurrentUserService.Dashboard = row2["ROLDASHBOARD"].ToString();
+                }
+
+                Console.WriteLine("Login successful, redirecting to http://localhost:5020/");
+                NavigationManager.NavigateTo("http://localhost:5020/", forceLoad: true);
+            }
+            else
+            {
+                errorMessage = "Usuario y/o Contraseña incorrectos.";
+                await JSRuntime.InvokeVoidAsync("toast", new { message = errorMessage });
+                Console.WriteLine("Authentication failed");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Ocurrió un error inesperado. Intente de nuevo más tarde.";
+            await JSRuntime.InvokeVoidAsync("toast", new { message = errorMessage });
+            Console.WriteLine($"Error in HandleLogin: {ex.Message}");
+        }
+    }
+
+    private void GoogleLogin()
+    {
+        Console.WriteLine("Google login clicked (placeholder)");
+        // Implement Google authentication logic here if needed
+    }
+}

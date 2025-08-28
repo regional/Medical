@@ -1,0 +1,343 @@
+﻿@page "/Account/Lockout"
+@page "/lockout"
+@page "/logout"
+@rendermode RenderMode.InteractiveServer
+@layout EmptyLayout
+
+@using CAID.Data
+@using CAID.Entity
+@using MEDICAL.Services
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject CurrentUserService CurrentUserService
+
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cerrando Sesión - MEDICAL System</title>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23667eea"/><stop offset="100%" stop-color="%23764ba2"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23a)"/></svg>');
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lockout-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        
+
+        {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .lockout-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+
+        {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+
+        }
+
+        .lockout-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+
+        .lockout-message {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .progress-container {
+            background: #e9ecef;
+            border-radius: 25px;
+            height: 6px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 25px;
+            animation: loading 3s ease-in-out;
+            width: 0%;
+        }
+
+        
+
+        {
+            width: 0%;
+        }
+
+        100% {
+            width: 100%;
+        }
+
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                color: white;
+                text-decoration: none;
+            }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #6c757d;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+            .btn-secondary:hover {
+                background: #6c757d;
+                color: white;
+                text-decoration: none;
+            }
+
+        .user-info {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+
+            .user-info h6 {
+                margin: 0;
+                color: #495057;
+                font-weight: 600;
+            }
+
+            .user-info small {
+                color: #6c757d;
+            }
+
+        .footer-text {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+       
+
+        {
+            transform: rotate(360deg);
+        }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lockout-container">
+        @if (isLoggingOut)
+        {
+            <div class="lockout-icon">🔒</div>
+            <h2 class="lockout-title">Cerrando Sesión</h2>
+
+            @if (!string.IsNullOrEmpty(CurrentUserService?.Nombre))
+            {
+                <div class="user-info">
+                    <h6>@CurrentUserService.Nombre</h6>
+                    <small>@CurrentUserService.Login</small>
+                </div>
+            }
+
+            <p class="lockout-message">
+                <span class="spinner"></span>
+                Terminando su sesión de forma segura...
+            </p>
+
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+        }
+        else
+        {
+            <div class="lockout-icon">✅</div>
+            <h2 class="lockout-title">Sesión Cerrada</h2>
+            <p class="lockout-message">
+                Su sesión ha sido cerrada exitosamente.<br>
+                Gracias por usar el sistema MEDICAL.
+            </p>
+
+            <div>
+                <a href="/login" class="btn-primary">Iniciar Sesión</a>
+                <a href="/" class="btn-secondary">Ir al Inicio</a>
+            </div>
+        }
+
+        <div class="footer-text">
+            Copyright © 2024-2025 NYPL.APP, Inc. All rights reserved.
+        </div>
+    </div>
+</body>
+
+@code {
+    private bool isLoggingOut = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine("Lockout: Iniciando proceso de cierre de sesión");
+
+            // Mostrar mensaje de cierre por 3 segundos
+            await Task.Delay(3000);
+
+            await PerformLogout();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en Lockout.OnInitializedAsync: {ex.Message}");
+            // Aún en caso de error, proceder con el logout
+            await PerformLogout();
+        }
+    }
+
+    private async Task PerformLogout()
+    {
+        try
+        {
+            Console.WriteLine("Lockout: Limpiando datos de sesión");
+
+            // Limpiar todos los datos del usuario actual
+            if (CurrentUserService != null)
+            {
+                CurrentUserService.ID = string.Empty;
+                CurrentUserService.SGXID = string.Empty;
+                CurrentUserService.Nombre = string.Empty;
+                CurrentUserService.Login = string.Empty;
+                CurrentUserService.Password = string.Empty;
+                CurrentUserService.CompGUID = string.Empty;
+                CurrentUserService.UserNumero = string.Empty;
+                CurrentUserService.UserImgUrl = string.Empty;
+                CurrentUserService.UserAsociado = string.Empty;
+                CurrentUserService.Html = string.Empty;
+                CurrentUserService.RoleGUID = string.Empty;
+                CurrentUserService.RoleNombre = string.Empty;
+                CurrentUserService.TerID = string.Empty;
+                CurrentUserService.CanRead = false;
+                CurrentUserService.CanCreate = false;
+                CurrentUserService.CanModify = false;
+                CurrentUserService.CanPrint = false;
+                CurrentUserService.CanDelete = false;
+                CurrentUserService.Dashboard = string.Empty;
+            }
+
+            // Limpiar CURRENTUSR (si está disponible)
+            if (typeof(CURRENTUSR).GetProperties().Any())
+            {
+                CURRENTUSR.ID = string.Empty;
+                CURRENTUSR.SGXID = string.Empty;
+            }
+
+            // Limpiar cualquier almacenamiento del navegador (si se usa)
+            await JSRuntime.InvokeVoidAsync("eval", "if(typeof(Storage) !== 'undefined') { localStorage.clear(); sessionStorage.clear(); }");
+
+            Console.WriteLine("Lockout: Sesión limpiada exitosamente");
+
+            isLoggingOut = false;
+            StateHasChanged();
+
+            // Opcional: redirigir automáticamente después de 5 segundos
+            await Task.Delay(5000);
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en PerformLogout: {ex.Message}");
+
+            // En caso de error, mostrar como completado y permitir navegación manual
+            isLoggingOut = false;
+            StateHasChanged();
+        }
+    }
+
+    // Método público para logout inmediato (puede ser llamado desde otros componentes)
+    public async Task LogoutNow()
+    {
+        isLoggingOut = true;
+        StateHasChanged();
+        await PerformLogout();
+    }
+}

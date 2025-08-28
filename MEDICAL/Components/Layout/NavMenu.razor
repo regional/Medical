@@ -1,0 +1,172 @@
+﻿@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">MEDICAL</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="registropaciente">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Registro Paciente
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="registromedico">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Registro Medicos
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="programacioncita">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Programación de Citas
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Historiacita">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Historial de Citas
+            </NavLink>
+        </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Manage">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="nav-link">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Paises">
+                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Configuracion
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin,SuperAdmin">
+            <Authorized>
+                <div class="nav-section-header px-3 mt-3 mb-2">
+                    <small class="text-muted">CONFIGURACIÓN</small>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Paises">
+                        <span class="bi bi-globe" aria-hidden="true"></span> Países
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="ToggleSubMenu" style="cursor: pointer;">
+                        <span class="bi bi-gear-fill" aria-hidden="true"></span> Sistema
+                        <span class="bi @(isSubMenuVisible ? "bi-chevron-down" : "bi-chevron-right")" style="float: right;"></span>
+                    </NavLink>
+                </div>
+
+                @if (isSubMenuVisible)
+                {
+                    <div class="nav-item px-3">
+                        <div class="nav-item flex-column ms-3">
+                            <NavLink class="nav-link" href="configuracion/opcion1">
+                                <span class="bi bi-person-fill-gear" aria-hidden="true"></span> Sub Opción 1
+                            </NavLink>
+                        </div>
+                    </div>
+                    <div class="nav-item px-3">
+                        <div class="nav-item flex-column ms-3">
+                            <NavLink class="nav-link" href="configuracion/opcion2">
+                                <span class="bi bi-building-fill-gear" aria-hidden="true"></span> Sub Opción 2
+                            </NavLink>
+                        </div>
+                    </div>
+                }
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin,SuperAdmin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="ToggleReportesSubMenu" style="cursor: pointer;">
+                        <span class="bi bi-file-earmark-bar-graph-fill" aria-hidden="true"></span> Reportes
+                        <span class="bi @(isReportesSubMenuVisible ? "bi-chevron-down" : "bi-chevron-right")" style="float: right;"></span>
+                    </NavLink>
+                </div>
+
+                @if (isReportesSubMenuVisible)
+                {
+                    <div class="nav-item px-3">
+                        <div class="nav-item flex-column ms-3">
+                            <NavLink class="nav-link" href="reportes/pacientes">
+                                <span class="bi bi-dot" aria-hidden="true"></span> Reporte Pacientes
+                            </NavLink>
+                        </div>
+                    </div>
+                    <div class="nav-item px-3">
+                        <div class="nav-item flex-column ms-3">
+                            <NavLink class="nav-link" href="reportes/citas">
+                                <span class="bi bi-dot" aria-hidden="true"></span> Reporte Citas
+                            </NavLink>
+                        </div>
+                    </div>
+                }
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    // Lógica para tu primer submenú ("Sistema")
+    private bool isSubMenuVisible = false;
+
+    private void ToggleSubMenu()
+    {
+        isSubMenuVisible = !isSubMenuVisible;
+    }
+
+    // Lógica INDEPENDIENTE para el nuevo submenú ("Reportes")
+    private bool isReportesSubMenuVisible = false;
+
+    private void ToggleReportesSubMenu()
+    {
+        isReportesSubMenuVisible = !isReportesSubMenuVisible;
+    }
+
+    // Código existente para manejar la URL
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

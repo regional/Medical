@@ -1,0 +1,352 @@
+﻿@page "/historiacita"
+@using System.Data
+@using System.Collections
+@using CAID.Data
+@using System.ComponentModel.DataAnnotations
+@using static Microsoft.EntityFrameworkCore.DbLoggerCategory
+@inject IJSRuntime JSRuntime
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<PageTitle>Confirmación de Citas - MEDICAL</PageTitle>
+
+<div class="d-flex align-items-center mb-4">
+    <div class="me-auto">
+        <h2 class="mb-1 fw-bold">
+            <i class="fas fa-calendar-check me-3"></i>
+            Confirmación de Citas
+        </h2>
+        <p class="mb-0 opacity-75">Visualización y gestión de citas confirmadas</p>
+    </div>
+</div>
+
+@if (pnlConsulta)
+{
+    <div class="card border-0 shadow-lg mb-4" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
+        <div class="card-header border-0 bg-transparent">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label for="startDate" class="form-label mb-0 fw-semibold">Desde:</label>
+                        <input type="date" class="form-control" id="startDate" @bind="startDate" />
+                    </div>
+                    <div class="col-auto">
+                        <label for="endDate" class="form-label mb-0 fw-semibold">Hasta:</label>
+                        <input type="date" class="form-control" id="endDate" @bind="endDate" />
+                    </div>
+                    <div class="col-auto">
+                        <label for="status" class="form-label mb-0 fw-semibold">Estatus:</label>
+                        <select id="status" class="form-select" @bind="status">
+                            <option value="Confirmadas">Confirmadas</option>
+                            <option value="Pendientes">Pendientes</option>
+                            <option value="Canceladas">Canceladas</option>
+                        </select>
+                    </div>
+                    <div class="col-auto d-flex align-items-end">
+                        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm hover-lift" @onclick="_Search">
+                            <i class="fas fa-search me-2"></i>
+                            Buscar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm hover-lift ms-2" @onclick="_Clear">
+                            <i class="fas fa-eraser me-2"></i>
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando citas...</p>
+                </div>
+            }
+            else if (citasData == null || citasData.Rows.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No se encontraron citas</h5>
+                    <p class="text-muted">Ajuste los filtros de búsqueda e intente de nuevo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="border-0 fw-bold ps-4">Cita No.</th>
+                                <th class="border-0 fw-bold">Paciente / Terapeuta</th>
+                                <th class="border-0 fw-bold">Especialidad</th>
+                                <th class="border-0 fw-bold">Fecha</th>
+                                <th class="border-0 fw-bold">Horario</th>
+                                <th class="border-0 fw-bold text-center" style="width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (DataRow row in citasData.Rows)
+                            {
+                                <tr class="hover-row">
+                                    <td class="ps-4">
+                                        <button type="button" class="btn btn-link text-decoration-none p-0 text-start fw-semibold hover-underline" @onclick="@(() => _Select("Edit", row["ROWGUID"].ToString()))">
+                                            @row["CITANUMERO"]
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <p class="mb-0 fw-semibold">@row["PACIENTE"]</p>
+                                        <small class="text-muted">@row["TERAPEUTA"]</small>
+                                    </td>
+                                    <td>@row["ESPECIALIDAD"]</td>
+                                    <td>@(((DateTime)row["FECHA"]).ToString("dd-MM-yyyy"))</td>
+                                    <td>@row["HORARIO"]</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-primary btn-sm rounded-pill hover-scale" title="Actualizar Estado">
+                                            <i class="fas fa-sync-alt"></i> Actualizar Estado
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>
+                <span id="successMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos copiados del archivo Paises.razor para mantener la consistencia */
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+
+    .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+        .hover-scale:hover {
+            transform: scale(1.1);
+        }
+
+    .hover-underline {
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .hover-underline:hover {
+            color: #0d6efd !important;
+        }
+
+        .hover-underline:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #0d6efd;
+            transition: width 0.3s ease;
+        }
+
+        .hover-underline:hover:after {
+            width: 100%;
+        }
+
+    .hover-row {
+        transition: all 0.3s ease;
+    }
+
+        .hover-row:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            transform: translateX(5px);
+        }
+
+    .card {
+        border-radius: 20px !important;
+    }
+
+    .btn {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .table thead th {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+</style>
+
+@code {
+    // Variables y propiedades
+    private ArrayList xQueryParameters = new ArrayList();
+    private ArrayList xQueryValues = new ArrayList();
+    private string xBase => "SMX00002"; // Ejemplo, se debe usar la base de datos correcta para citas
+    private string xGUID = string.Empty;
+
+    // Controles de panel
+    private bool pnlConsulta = true;
+    private bool isLoading = false;
+
+    // Controles de formulario (filtros)
+    private DateTime startDate = DateTime.Parse("2020-08-25"); // Valores por defecto de la imagen
+    private DateTime endDate = DateTime.Parse("2025-08-26"); // Valores por defecto de la imagen
+    private string status = "Confirmadas";
+
+    // Data
+    private DataTable citasData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _Search();
+    }
+
+    private async Task _Search()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            await Task.Delay(300); // Simular carga
+
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@FECHA_DESDE");
+            xQueryValues.Add(startDate.ToString("yyyy-MM-dd"));
+            xQueryParameters.Add("@FECHA_HASTA");
+            xQueryValues.Add(endDate.ToString("yyyy-MM-dd"));
+            xQueryParameters.Add("@ESTATUS");
+            xQueryValues.Add(status);
+
+            // Suposición de un Stored Procedure para la consulta de citas
+           // Query = xBase + "S1";
+
+            // Simulación de datos para coincidir con la imagen
+            citasData = new DataTable();
+            citasData.Columns.Add("CITANUMERO");
+            citasData.Columns.Add("PACIENTE");
+            citasData.Columns.Add("TERAPEUTA");
+            citasData.Columns.Add("ESPECIALIDAD");
+            citasData.Columns.Add("FECHA", typeof(DateTime));
+            citasData.Columns.Add("HORARIO");
+            citasData.Columns.Add("ROWGUID");
+
+            citasData.Rows.Add("1", "MILAGROS BIANNELIS BRITO CORDERO", "MARIA EUGENIA CHAHIN DE LA CRUZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-25"), "10:00 AM - 10:30 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("2", "CAMILO ERNESTO ROJAS BURGOS", "TOMAS JAVIER RUBIO CAÑADAS", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-25"), "04:00 PM - 05:00 PM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("3", "STARLIN JOSE FRANCO VASQUEZ", "TOMAS JAVIER RUBIO CAÑADAS", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "03:00 PM - 03:30 PM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("4", "MARY PAZ GARCIA PADILLA", "ALEXANDRA MARIA GUZMAN JIMENEZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "08:30 AM - 09:00 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("5", "CAMILA SANCHEZ VARGAS", "ALEXANDRA MARIA GUZMAN JIMENEZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "08:30 AM - 09:00 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("6", "MARY PAZ GARCIA PADILLA", "MARIA EUGENIA CHAHIN DE LA CRUZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "08:30 AM - 09:00 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("7", "MIRANDA REYES ROSARIO", "MARIA EUGENIA CHAHIN DE LA CRUZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "08:30 AM - 09:00 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("8", "CAMILA SANCHEZ VARGAS", "MARIA EUGENIA CHAHIN DE LA CRUZ", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "08:30 AM - 09:00 AM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("9", "STEVEN ALBERTO FRANCO VASQUEZ", "LUISA CASTILLO GUZMAN", "TERAPIAS COMPLEMENTARIAS", DateTime.Parse("2020-08-26"), "02:30 PM - 03:00 PM", Guid.NewGuid().ToString());
+            citasData.Rows.Add("10", "CAMILA YADIRIS MARIA VASQUEZ", "LAUREN JACQUELINE CORNELIO MARTE", "ATENCIÓN E INTERVENCIÓN TEMPRANA", DateTime.Parse("2020-08-31"), "09:00 AM - 10:00 AM", Guid.NewGuid().ToString());
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorToast($"Error al cargar citas: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    protected void _Clear()
+    {
+        startDate = DateTime.Today;
+        endDate = DateTime.Today;
+        status = "Confirmadas";
+        citasData = null; // Limpiar datos de la tabla
+        StateHasChanged();
+    }
+
+    protected async Task _Select(string command, string commandArgument)
+    {
+        // Se podría implementar una lógica para editar el estado de la cita.
+        // Por ahora, solo se muestra el mensaje de confirmación.
+        if (command == "Edit")
+        {
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "⚠️ ¿Desea actualizar el estado de esta cita?");
+            if (confirmed)
+            {
+                await ShowSuccessToast("Estado de la cita actualizado");
+            }
+        }
+    }
+
+    // Métodos de Toast
+    private async Task ShowSuccessToast(string message)
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $@"
+            document.getElementById('successMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('successToast')).show();
+        ");
+    }
+
+    private async Task ShowErrorToast(string message)
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $@"
+            document.getElementById('errorMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('errorToast')).show();
+        ");
+    }
+
+    // Métodos helper, replicados del código de ejemplo
+    private string GetSessionValue(string key)
+    {
+        // Simulación de valores de sesión
+        return key switch
+        {
+            "CURRENTUSR_ID" => "USER123",
+            "CURRENTUSR_SGXID" => "SGX001",
+            _ => string.Empty
+        };
+    }
+}

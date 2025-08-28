@@ -1,0 +1,39 @@
+﻿@page "/Account/Logout"
+@page "/logout"
+@using CAID.Entity
+@using MEDICAL.Services
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager NavigationManager
+@inject CurrentUserService CurrentUserService
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Reset CURRENTUSR (equivalent to CURRENTUSR.Reset())
+        CURRENTUSR.Reset();
+
+        // Clear CurrentUserService (equivalent to FormsAuthentication.SignOut())
+        CurrentUserService.ID = string.Empty;
+        CurrentUserService.SGXID = string.Empty;
+        CurrentUserService.Nombre = string.Empty;
+        CurrentUserService.Login = string.Empty;
+        CurrentUserService.Password = string.Empty;
+        CurrentUserService.CompGUID = string.Empty;
+        CurrentUserService.UserNumero = string.Empty;
+        CurrentUserService.UserImgUrl = string.Empty;
+        CurrentUserService.UserAsociado = string.Empty;
+        CurrentUserService.Html = string.Empty;
+        CurrentUserService.RoleGUID = string.Empty;
+        CurrentUserService.RoleNombre = string.Empty;
+        CurrentUserService.TerID = string.Empty;
+        CurrentUserService.CanRead = false;
+        CurrentUserService.CanCreate = false;
+        CurrentUserService.CanModify = false;
+        CurrentUserService.CanPrint = false;
+        CurrentUserService.CanDelete = false;
+        CurrentUserService.Dashboard = string.Empty;
+
+        // Equivalent to Response.Redirect("login.aspx") - immediate redirect
+        NavigationManager.NavigateTo("/login", replace: true);
+    }
+}
