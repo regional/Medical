@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <Reference Include="CAID">
-      <HintPath>F:\New folder\New folder\ES_SIGES_CAID\bin\Debug\CAID.dll</HintPath>
+      <HintPath>..\CAID.dll</HintPath>
     </Reference>
     <Reference Include="CAID.Data">
       <HintPath>..\..\..\Desktop\codigo aspx\login\bin\CAID.Data.dll</HintPath>

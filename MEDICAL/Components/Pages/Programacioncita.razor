@@ -16,7 +16,6 @@
 
 @if (pnlConsulta)
 {
-    <!-- Panel de Consulta -->
     <div class="card border-0 shadow-lg mb-4" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
         <div class="card-header border-0 bg-transparent">
             <div class="d-flex flex-wrap gap-3 align-items-center">
@@ -33,6 +32,29 @@
                         <i class="fas fa-sync-alt me-2"></i>
                         Actualizar
                     </button>
+                </div>
+            </div>
+            <div class="mt-3 row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" @bind="_filtroFecha1" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" @bind="_filtroFecha2" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Especialista</label>
+                    <input type="text" class="form-control" placeholder="Especialista..." @bind="_filtroEspecialista" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estatus</label>
+                    <select class="form-select" @bind="_filtroEstatus">
+                        <option value="-1">Todos</option>
+                        <option value="0">Programada</option>
+                        <option value="1">Confirmada</option>
+                        <option value="2">Cancelada</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -71,10 +93,12 @@
                         <tbody>
                             @foreach (DataRow row in citasData.Rows)
                             {
-                                <tr class="hover-row">
-                                    <td>@row["ROWIDX"]</td>
+                                <tr class="hover-row cursor-pointer" @onclick="@(async () => await _Edit(row["ROWGUID"].ToString()))">
                                     <td>
-                                        <div class="fw-semibold">@row["FULLNAME"]</div>
+                                        <span class="badge bg-primary fs-6">@row["ROWNO"]</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@row["NOMBRE"]</div>
                                         <small class="text-muted">@row["TERAPISTANOMBRE"]</small>
                                     </td>
                                     <td class="d-none d-md-table-cell">
@@ -99,7 +123,6 @@
 
 @if (pnlData)
 {
-    <!-- Header del Paciente (si hay uno seleccionado) -->
     @if (pacienteHeaderData != null && pacienteHeaderData.Rows.Count > 0)
     {
         @foreach (DataRow row in pacienteHeaderData.Rows)
@@ -108,7 +131,6 @@
         }
     }
 
-    <!-- Panel de Registro de Citas -->
     <div class="card border-0 shadow-lg" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
         <div class="card-header border-0 bg-transparent">
             <div class="d-flex flex-wrap gap-3 align-items-center">
@@ -117,9 +139,16 @@
                     Registro de Citas
                 </h3>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Save">
+                    <button type="button" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Save" disabled="@isLoading">
                         <i class="fas fa-save me-2"></i>
-                        Guardar
+                        @if (isLoading)
+                        {
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <span>Guardar</span>
+                        }
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-lg rounded-pill px-4 shadow-sm hover-lift" @onclick="_Cancel">
                         <i class="fas fa-undo me-2"></i>
@@ -135,7 +164,6 @@
 
         <div class="card-body">
             <div class="row g-4">
-                <!-- Record No. -->
                 <div class="col-md-8">
                     <label class="form-label text-danger fw-semibold">Record No.</label>
                     <div class="input-group">
@@ -146,17 +174,16 @@
                     </div>
                 </div>
 
-                <!-- Paciente -->
                 <div class="col-md-12">
                     <label class="form-label text-danger fw-semibold">Paciente</label>
-                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbPacienteValue) && showValidation ? "is-invalid" : "")" 
-                           // @bind="cmbPacienteValue" @onchange="OnPacienteChanged">
+                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbPacienteValue) && showValidation ? "is-invalid" : "")"
+                                          value="@cmbPacienteValue" @onchange="@(async e => { cmbPacienteValue = e.Value.ToString(); await OnPacienteChanged(); })">
                         <option value="">-- SELECCIONE --</option>
                         @if (pacientesData != null)
                         {
                             @foreach (DataRow row in pacientesData.Rows)
                             {
-                                <option value="@row["ROWGUID"]">@row["FULLNAME"]</option>
+                                <option value="@row["ROWGUID"]">@row["NOMBRE"]</option>
                             }
                         }
                     </select>
@@ -166,22 +193,10 @@
                     }
                 </div>
 
-                <!-- Fecha -->
-                <div class="col-md-6">
-                    <label class="form-label text-danger fw-semibold">Fecha</label>
-                    <input type="datetime" class="form-control form-control-lg @(string.IsNullOrEmpty(txtFechaIni) && showValidation ? "is-invalid" : "")" 
-                           //@bind="txtFechaIni" @bind:format="yyyy-MM-dd">
-                    @if (string.IsNullOrEmpty(txtFechaIni) && showValidation)
-                    {
-                        <div class="invalid-feedback">Requerido!</div>
-                    }
-                </div>
-
-                <!-- Servicio -->
                 <div class="col-md-6">
                     <label class="form-label text-danger fw-semibold">Servicio</label>
-                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbOrigenTratamientoValue) && showValidation ? "is-invalid" : "")" 
-                           // @bind="cmbOrigenTratamientoValue" @onchange="OnOrigenTratamientoChanged">
+                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbOrigenTratamientoValue) && showValidation ? "is-invalid" : "")"
+                                          value="@cmbOrigenTratamientoValue" @onchange="@(async e => { cmbOrigenTratamientoValue = e.Value.ToString(); await OnOrigenTratamientoChanged(); })">
                         <option value="">-- SELECCIONE --</option>
                         @if (origenTratamientoData != null)
                         {
@@ -197,17 +212,16 @@
                     }
                 </div>
 
-                <!-- Especialista -->
                 <div class="col-md-6">
                     <label class="form-label text-danger fw-semibold">Especialista</label>
-                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbTerapistaValue) && showValidation ? "is-invalid" : "")" 
-                           // @bind="cmbTerapistaValue" @onchange="OnTerapistaChanged">
+                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbTerapistaValue) && showValidation ? "is-invalid" : "")"
+                                          value="@cmbTerapistaValue" @onchange="@(async e => { cmbTerapistaValue = e.Value.ToString(); await OnTerapistaChanged(); })">
                         <option value="">-- SELECCIONE --</option>
                         @if (terapistasData != null)
                         {
                             @foreach (DataRow row in terapistasData.Rows)
                             {
-                                <option value="@row["ROWGUID"]">@row["FULLNAME"]</option>
+                                <option value="@row["ROWGUID"]">@row["NOMBRE1"]</option>
                             }
                         }
                     </select>
@@ -217,17 +231,26 @@
                     }
                 </div>
 
-                <!-- Horario -->
+                <div class="col-md-6">
+                    <label class="form-label text-danger fw-semibold">Fecha</label>
+                    <input type="date" class="form-control form-control-lg @((!FechaIni.HasValue) && showValidation ? "is-invalid" : "")"
+                                         @bind="FechaIni" @bind:format="yyyy-MM-dd">
+                    @if ((!FechaIni.HasValue) && showValidation)
+                    {
+                        <div class="invalid-feedback">Requerido!</div>
+                    }
+                </div>
+
                 <div class="col-md-6">
                     <label class="form-label text-danger fw-semibold">Horario</label>
-                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbHorarioValue) && showValidation ? "is-invalid" : "")" 
-                            @bind="cmbHorarioValue">
+                    <select class="form-select form-select-lg @(string.IsNullOrEmpty(cmbHorarioValue) && showValidation ? "is-invalid" : "")"
+                                          @bind="cmbHorarioValue">
                         <option value="">-- SELECCIONE --</option>
                         @if (horariosData != null)
                         {
                             @foreach (DataRow row in horariosData.Rows)
                             {
-                                <option value="@row["Numero_Ordinal"]">@row["HoraDescripcion"]</option>
+                                <option value="@row["HORAVALUE"]">@row["HORA"]</option>
                             }
                         }
                     </select>
@@ -237,7 +260,6 @@
                     }
                 </div>
 
-                <!-- Condición -->
                 <div class="col-md-12">
                     <label class="form-label text-danger fw-semibold">Condición</label>
                     <select class="form-select form-select-lg" @bind="cmbCondicionValue">
@@ -246,25 +268,22 @@
                     </select>
                 </div>
 
-                <!-- Participantes -->
                 <div class="col-md-12">
                     <label class="form-label text-danger fw-semibold">Participantes</label>
-                    <textarea class="form-control" rows="4" @bind="txtParticipantes" 
-                              placeholder="Ingrese los participantes de la cita..."></textarea>
+                    <textarea class="form-control" rows="4" @bind="txtParticipantes"
+                                             placeholder="Ingrese los participantes de la cita..."></textarea>
                 </div>
 
-                <!-- Observación -->
                 <div class="col-md-12">
                     <label class="form-label text-danger fw-semibold">Observación</label>
-                    <textarea class="form-control" rows="4" @bind="txtObservacion" 
-                              placeholder="Ingrese observaciones adicionales..."></textarea>
+                    <textarea class="form-control" rows="4" @bind="txtObservacion"
+                                             placeholder="Ingrese observaciones adicionales..."></textarea>
                 </div>
             </div>
         </div>
     </div>
 }
 
-<!-- Toast Notifications -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
         <div class="d-flex">
@@ -287,47 +306,59 @@
 </div>
 
 <style>
-    .hover-lift {
-        transition: all 0.3s ease;
+        .hover-lift {
+                transition: all 0.3s ease;
+
     }
 
-    .hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+            .hover-lift:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+
     }
 
-    .hover-row {
-        transition: all 0.3s ease;
+        .hover-row {
+                transition: all 0.3s ease;
+
     }
 
-    .hover-row:hover {
-        background-color: rgba(13, 110, 253, 0.05);
-        transform: translateX(5px);
+            .hover-row:hover {
+                    background-color: rgba(13, 110, 253, 0.05);
+                    transform: translateX(5px);
+
     }
 
-    .card {
-        border-radius: 15px !important;
+        .cursor-pointer {
+                cursor: pointer;
+
     }
 
-    .btn {
-        font-weight: 600;
+        .card {
+                border-radius: 15px !important;
+
     }
 
-    .form-label.text-danger {
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
+        .btn {
+                font-weight: 600;
+
+    }
+
+        .form-label.text-danger {
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+
     }
 </style>
 
 @code {
-    // Variables exactas como en el código original
-    private ArrayList xQueryParameters = new ArrayList();
+    // Variables exactas como en el código original
+    private ArrayList xQueryParameters = new ArrayList();
     private ArrayList xQueryValues = new ArrayList();
     private string xCommand = string.Empty;
     private string xQuery = string.Empty;
 
-    // HiddenFields equivalents
-    private string PacienteID = "0";
+    // HiddenFields equivalents
+    private string PacienteID = "0";
     private string MedicoID = "0";
     private string TerapistaID = "0";
     private string EnfermeraID = "0";
@@ -336,14 +367,20 @@
     private string xGUID = string.Empty;
     private string xActividadGUID = string.Empty;
 
-    // Panel controls
-    private bool pnlConsulta = true;
+    // Panel controls
+    private bool pnlConsulta = true;
     private bool pnlData = false;
 
-    // Form controls
-    private string txtRecordNo = string.Empty;
+    // **NUEVAS VARIABLES PARA FILTROS**
+    private DateTime? _filtroFecha1 = null;
+    private DateTime? _filtroFecha2 = null;
+    private string _filtroEspecialista = string.Empty;
+    private int _filtroEstatus = -1;
+
+    // Form controls
+    private string txtRecordNo = string.Empty;
     private string cmbPacienteValue = string.Empty;
-    private string txtFechaIni = string.Empty;
+    private DateTime? FechaIni = null;
     private string cmbOrigenTratamientoValue = string.Empty;
     private string cmbTerapistaValue = string.Empty;
     private string cmbHorarioValue = string.Empty;
@@ -351,20 +388,20 @@
     private string txtParticipantes = string.Empty;
     private string txtObservacion = string.Empty;
 
-    // Data sources
-    private DataTable citasData;
+    // Data sources
+    private DataTable citasData;
     private DataTable pacientesData;
     private DataTable origenTratamientoData;
     private DataTable terapistasData;
     private DataTable horariosData;
     private DataTable pacienteHeaderData;
 
-    // Estados
-    private bool isLoading = false;
+    // Estados
+    private bool isLoading = false;
     private bool showValidation = false;
 
-    // Propiedades exactas como en el código original
-    private string xBase => "SMX00500";
+    // Propiedades exactas como en el código original
+    private string xBase => "SMX00500";
     private string REFGUID => cmbPacienteValue?.ToString().ToUpper() ?? string.Empty;
     private string MEDID => string.Empty;
     private string TERID => cmbTerapistaValue?.ToString().Trim().ToUpper() ?? string.Empty;
@@ -372,8 +409,8 @@
     private string ORIGENID => cmbOrigenTratamientoValue?.ToString().Trim().ToUpper() ?? string.Empty;
     private string CITAESTATUS => cmbCondicionValue?.ToString() ?? "0";
     private string DETALLES => txtParticipantes?.Trim().ToString() ?? string.Empty;
-    private string FECHAINI => txtFechaIni?.ToString() ?? string.Empty;
-    private string HORAORDINAL => cmbHorarioValue?.ToString().ToUpper() ?? string.Empty;
+    private string FECHAINI => FechaIni?.ToString("yyyy-MM-dd") ?? string.Empty;
+    private string HORA => cmbHorarioValue?.ToString().ToUpper() ?? string.Empty;
     private string OBSERVACION => txtObservacion?.ToString().ToUpper() ?? string.Empty;
     private string ROWGUID => xGUID?.ToUpper() ?? string.Empty;
     private string ROWUSERID => GetSessionValue("CURRENTUSR_ID");
@@ -382,9 +419,8 @@
     protected override async Task OnInitializedAsync()
     {
         await ValidateSession();
-        xGUID = Guid.NewGuid().ToString().ToUpper();
         await _Iniciar();
-        await _New();
+        await _Show();
     }
 
     private async Task ValidateSession()
@@ -392,6 +428,7 @@
         if (string.IsNullOrEmpty(GetSessionValue("CURRENTUSR_ID")))
         {
             await ShowErrorToast("Sesión no válida. Redirigiendo al login...");
+            Navigation.NavigateTo("/login");
             return;
         }
     }
@@ -422,21 +459,25 @@
     {
         try
         {
-            // Cargar pacientes
-            xQueryParameters.Clear();
+            // Cargar pacientes
+            xQueryParameters.Clear();
             xQueryValues.Clear();
             xQueryParameters.Add("@NOMBRE");
             xQueryValues.Add("%");
             xQueryParameters.Add("@ROWSGXID");
             xQueryValues.Add(ROWSGXID);
-            pacientesData = DB.ExecuteAdapter("PAX00000S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
 
-            // Cargar origen de tratamiento (servicios)
-            origenTratamientoData = DB.ExecuteAdapter("SMX30014S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+            pacientesData = DB.ExecuteAdapter("SMX00001_copy1S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
 
-            // Inicializar otros combos
-            terapistasData = null;
-            horariosData = null;
+            // Cargar servicios/especialidades
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@NOMBRE");
+            xQueryValues.Add("%");
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+
+            origenTratamientoData = DB.ExecuteAdapter("SMX30013S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
         }
         catch (Exception ex)
         {
@@ -452,11 +493,12 @@
         cmbOrigenTratamientoValue = string.Empty;
         cmbTerapistaValue = string.Empty;
         txtParticipantes = string.Empty;
-        txtFechaIni = string.Empty;
+        FechaIni = null;
         cmbHorarioValue = string.Empty;
         txtObservacion = string.Empty;
         pacienteHeaderData = null;
         showValidation = false;
+        txtRecordNo = string.Empty;
     }
 
     private async Task _IniciarFormulario()
@@ -496,16 +538,18 @@
             xQueryValues.Add("%");
             xQueryParameters.Add("@ROWSGXID");
             xQueryValues.Add(ROWSGXID);
-            xQueryParameters.Add("@FECHA1");
-            xQueryValues.Add(string.Empty);
+            // **Nuevas líneas con los filtros para el procedimiento almacenado**
+            xQueryParameters.Add("@FECHA1");
+            xQueryValues.Add(_filtroFecha1?.ToString("yyyy-MM-dd") ?? string.Empty);
             xQueryParameters.Add("@FECHA2");
-            xQueryValues.Add(string.Empty);
+            xQueryValues.Add(_filtroFecha2?.ToString("yyyy-MM-dd") ?? string.Empty);
             xQueryParameters.Add("@ESPECIALISTA");
-            xQueryValues.Add(string.Empty);
+            xQueryValues.Add(_filtroEspecialista ?? string.Empty);
             xQueryParameters.Add("@ESTATUS");
-            xQueryValues.Add(-1);
+            xQueryValues.Add(_filtroEstatus);
+            // **Fin de las nuevas líneas**
 
-            citasData = DB.ExecuteAdapter("SMX00500S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+            citasData = DB.ExecuteAdapter("SMX00500S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
         }
         catch (Exception ex)
         {
@@ -518,28 +562,26 @@
         }
     }
 
-    protected async Task OnPacienteChanged(ChangeEventArgs e)
+    protected async Task OnPacienteChanged()
     {
         try
         {
-            cmbPacienteValue = e.Value?.ToString() ?? string.Empty;
-
-            if (!string.IsNullOrEmpty(REFGUID))
+            if (!string.IsNullOrEmpty(cmbPacienteValue))
             {
-                // Cargar header del paciente
-                xQueryParameters.Clear();
+                // Cargar header del paciente
+                xQueryParameters.Clear();
                 xQueryValues.Clear();
                 xQueryParameters.Add("@REFGUID");
-                xQueryValues.Add(REFGUID);
+                xQueryValues.Add(cmbPacienteValue);
                 xQueryParameters.Add("@ROWSGXID");
                 xQueryValues.Add(ROWSGXID);
                 pacienteHeaderData = DB.ExecuteAdapter("PAX00000S5", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
 
-                // Verificar si el paciente tiene terapeuta asignado
-                xQueryParameters.Clear();
+                // Obtener terapeuta asignado al paciente
+                xQueryParameters.Clear();
                 xQueryValues.Clear();
                 xQueryParameters.Add("@GUID");
-                xQueryValues.Add(REFGUID);
+                xQueryValues.Add(cmbPacienteValue);
                 xQueryParameters.Add("@ROWSGXID");
                 xQueryValues.Add(ROWSGXID);
                 DataTable pacienteInfo = DB.ExecuteAdapter("PAX00000S2", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
@@ -547,7 +589,7 @@
                 if (pacienteInfo.Rows.Count > 0 && !string.IsNullOrEmpty(pacienteInfo.Rows[0]["TERAPISTAID"].ToString()))
                 {
                     cmbTerapistaValue = pacienteInfo.Rows[0]["TERAPISTAID"].ToString();
-                    await OnTerapistaChanged(new ChangeEventArgs { Value = cmbTerapistaValue });
+                    await OnTerapistaChanged();
                 }
             }
 
@@ -559,32 +601,30 @@
         }
     }
 
-    protected async Task OnOrigenTratamientoChanged(ChangeEventArgs e)
+    protected async Task OnOrigenTratamientoChanged()
     {
         try
         {
-            cmbOrigenTratamientoValue = e.Value?.ToString() ?? string.Empty;
+            if (!string.IsNullOrEmpty(cmbOrigenTratamientoValue))
+            {
+                xQueryParameters.Clear();
+                xQueryValues.Clear();
+                xQueryParameters.Add("@NOMBRE");
+                xQueryValues.Add("%");
+                xQueryParameters.Add("@ROWSGXID");
+                xQueryValues.Add(ROWSGXID);
+                xQueryParameters.Add("@ClaseID");
+                xQueryValues.Add(0);
+                xQueryParameters.Add("@ESPECIALIDADID");
+                xQueryValues.Add(cmbOrigenTratamientoValue);
 
-            // Cargar terapistas según especialidad
-            xQueryParameters.Clear();
-            xQueryValues.Clear();
-            xQueryParameters.Add("@NOMBRE");
-            xQueryValues.Add("%");
-            xQueryParameters.Add("@ROWSGXID");
-            xQueryValues.Add(ROWSGXID);
-            xQueryParameters.Add("@ClaseID");
-            xQueryValues.Add(0);
-            xQueryParameters.Add("@ESPECIALIDADID");
-            xQueryValues.Add(ORIGENID);
+                terapistasData = DB.ExecuteAdapter("SMX00300S4", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
 
-            terapistasData = DB.ExecuteAdapter("SMX00300S4", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
-            
-            // Limpiar selección de terapeuta y horario
-            cmbTerapistaValue = string.Empty;
-            cmbHorarioValue = string.Empty;
-            horariosData = null;
+                cmbTerapistaValue = string.Empty;
+                cmbHorarioValue = string.Empty;
 
-            StateHasChanged();
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
@@ -592,24 +632,29 @@
         }
     }
 
-    protected async Task OnTerapistaChanged(ChangeEventArgs e)
+    protected async Task OnTerapistaChanged()
     {
         try
         {
-            cmbTerapistaValue = e.Value?.ToString() ?? string.Empty;
-
-            // Cargar horarios disponibles
-            if (!string.IsNullOrEmpty(TERID) && !string.IsNullOrEmpty(FECHAINI))
-            {
-                string query = string.Format("[SMX10050P2] @TERID = '{0}',@FECHA = '{1}'", TERID, FECHAINI);
-                horariosData = DB.ExecuteAdapter(query);
-            }
-            else
+            if (string.IsNullOrEmpty(cmbTerapistaValue))
             {
                 horariosData = null;
+                return;
             }
 
+            xQueryParameters.Clear();
+            xQueryValues.Clear();
+            xQueryParameters.Add("@NOMBRE");
+            xQueryValues.Add("%");
+            xQueryParameters.Add("@ROWSGXID");
+            xQueryValues.Add(ROWSGXID);
+            xQueryParameters.Add("@TERGUID");
+            xQueryValues.Add(cmbTerapistaValue);
+
+            horariosData = DB.ExecuteAdapter("SMX10050S1", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+
             cmbHorarioValue = string.Empty;
+
             StateHasChanged();
         }
         catch (Exception ex)
@@ -618,15 +663,50 @@
         }
     }
 
+    protected async Task OnFechaChanged()
+    {
+        if (!string.IsNullOrEmpty(cmbTerapistaValue))
+        {
+            await OnTerapistaChanged();
+        }
+    }
+
     protected async Task _Save()
     {
         showValidation = true;
 
-        if (string.IsNullOrEmpty(cmbPacienteValue) || string.IsNullOrEmpty(txtFechaIni) || 
-            string.IsNullOrEmpty(cmbOrigenTratamientoValue) || string.IsNullOrEmpty(cmbTerapistaValue) ||
-            string.IsNullOrEmpty(cmbHorarioValue))
+        // Validaciones
+        if (string.IsNullOrEmpty(cmbPacienteValue))
         {
-            await ShowErrorToast("Por favor complete todos los campos requeridos");
+            await ShowErrorToast("Debe seleccionar un paciente");
+            StateHasChanged();
+            return;
+        }
+
+        if (!FechaIni.HasValue)
+        {
+            await ShowErrorToast("Debe seleccionar una fecha");
+            StateHasChanged();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(cmbOrigenTratamientoValue))
+        {
+            await ShowErrorToast("Debe seleccionar un servicio");
+            StateHasChanged();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(cmbTerapistaValue))
+        {
+            await ShowErrorToast("Debe seleccionar un especialista");
+            StateHasChanged();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(cmbHorarioValue))
+        {
+            await ShowErrorToast("Debe seleccionar un horario");
             StateHasChanged();
             return;
         }
@@ -638,50 +718,69 @@
 
             xQueryParameters.Clear();
             xQueryValues.Clear();
+
             xQueryParameters.Add("@REFGUID");
             xQueryValues.Add(REFGUID);
+
             xQueryParameters.Add("@MEDID");
             xQueryValues.Add(MEDID);
+
             xQueryParameters.Add("@TERID");
             xQueryValues.Add(TERID);
+
             xQueryParameters.Add("@ENFID");
             xQueryValues.Add(ENFID);
+
             xQueryParameters.Add("@ORIGENID");
             xQueryValues.Add(ORIGENID);
+
             xQueryParameters.Add("@FECHAINI");
             xQueryValues.Add(FECHAINI);
-            xQueryParameters.Add("@HORAORDINAL");
-            xQueryValues.Add(HORAORDINAL);
+
+            xQueryParameters.Add("@HORA");
+            xQueryValues.Add(HORA);
+
             xQueryParameters.Add("@OBSERVACION");
             xQueryValues.Add(OBSERVACION);
+
             xQueryParameters.Add("@ROWGUID");
             xQueryValues.Add(ROWGUID);
+
             xQueryParameters.Add("@ROWUSERID");
             xQueryValues.Add(ROWUSERID);
+
             xQueryParameters.Add("@ROWSGXID");
             xQueryValues.Add(ROWSGXID);
+
             xQueryParameters.Add("@CITAESTATUS");
             xQueryValues.Add(CITAESTATUS);
+
             xQueryParameters.Add("@DETALLES");
             xQueryValues.Add(DETALLES);
+
             xQueryParameters.Add("@TIPO");
             xQueryValues.Add("C");
+
             xQueryParameters.Add("@TIPOGUID");
             xQueryValues.Add(ROWGUID);
 
-            if (DB.ExecuteNonQuery("SMX00500SI", xQueryParameters, xQueryValues, CommandType.StoredProcedure))
+            bool result = DB.ExecuteNonQuery("SMX00500SI", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
+
+            if (result)
             {
+                await ShowSuccessToast("Cita registrada exitosamente");
                 _IniciarControles();
-                await ShowSuccessToast("Cita registrada en el sistema");
+                StateHasChanged();
             }
             else
             {
-                await ShowErrorToast("No se pudo guardar la cita");
+                await ShowErrorToast("Error al guardar la cita. Verifique los datos.");
             }
         }
         catch (Exception ex)
         {
             await ShowErrorToast($"Error al guardar: {ex.Message}");
+            Console.WriteLine($"Error completo: {ex}");
         }
         finally
         {
@@ -722,12 +821,12 @@
             {
                 cmbPacienteValue = searchResult.Rows[0]["PACIENTEGUID"].ToString();
                 txtRecordNo = string.Empty;
-                await OnPacienteChanged(new ChangeEventArgs { Value = cmbPacienteValue });
+                await OnPacienteChanged();
                 StateHasChanged();
             }
             else
             {
-                await ShowErrorToast($"Record No. {recordNo.Trim()} No Registrado");
+                await ShowErrorToast($"Record No. {recordNo.Trim()} no encontrado");
             }
         }
         catch (Exception ex)
@@ -744,21 +843,29 @@
             xQueryParameters.Clear();
             xQueryValues.Clear();
             xQueryParameters.Add("@GUID");
-            xQueryValues.Add(ROWGUID);
+            xQueryValues.Add(guid);
             xQueryParameters.Add("@ROWSGXID");
             xQueryValues.Add(ROWSGXID);
 
             DataTable dataTable = DB.ExecuteAdapter(xBase + "S2", xQueryParameters, xQueryValues, CommandType.StoredProcedure);
-            DataRow dataRow = dataTable.Rows.Count != 0 ? dataTable.Rows[0] : null;
 
-            if (dataRow != null)
+            if (dataTable.Rows.Count > 0)
             {
+                DataRow dataRow = dataTable.Rows[0];
+
                 cmbPacienteValue = dataRow["REFGUID"].ToString();
                 cmbOrigenTratamientoValue = dataRow["ORIGENID"].ToString();
                 cmbTerapistaValue = dataRow["TERID"].ToString();
-                txtFechaIni = Convert.ToDateTime(dataRow["FECHAINI"].ToString()).ToString("yyyy-MM-dd");
+                FechaIni = Convert.ToDateTime(dataRow["FECHAINI"]);
+                cmbHorarioValue = dataRow["HORA"].ToString();
+                cmbCondicionValue = dataRow["CITAESTATUS"].ToString();
+                txtParticipantes = dataRow["DETALLES"].ToString();
                 txtObservacion = dataRow["OBSERVACION"].ToString();
-                
+
+                await OnPacienteChanged();
+                await OnOrigenTratamientoChanged();
+                await OnTerapistaChanged();
+
                 pnlConsulta = false;
                 pnlData = true;
                 StateHasChanged();
@@ -770,25 +877,30 @@
         }
     }
 
-    // Toast methods
-    private async Task ShowSuccessToast(string message)
+    protected async Task _Edit(string guid)
+    {
+        await LoadCitaForEdit(guid);
+    }
+
+    // Toast methods
+    private async Task ShowSuccessToast(string message)
     {
         await JSRuntime.InvokeVoidAsync("eval", $@"
-            document.getElementById('successMessage').textContent = '{message}';
-            new bootstrap.Toast(document.getElementById('successToast')).show();
-        ");
+            document.getElementById('successMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('successToast')).show();
+        ");
     }
 
     private async Task ShowErrorToast(string message)
     {
         await JSRuntime.InvokeVoidAsync("eval", $@"
-            document.getElementById('errorMessage').textContent = '{message}';
-            new bootstrap.Toast(document.getElementById('errorToast')).show();
-        ");
+            document.getElementById('errorMessage').textContent = '{message}';
+            new bootstrap.Toast(document.getElementById('errorToast')).show();
+        ");
     }
 
-    // Helper methods
-    private string GetSessionValue(string key)
+    // Helper methods
+    private string GetSessionValue(string key)
     {
         try
         {
@@ -814,7 +926,7 @@
     {
         try
         {
-            var uri = new Uri(Navigation.Uri);
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             return query[name];
         }

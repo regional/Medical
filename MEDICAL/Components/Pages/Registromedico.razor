@@ -720,7 +720,7 @@
             xQueryValues.Add("%");
             xQueryParameters.Add("@ROWSGXID");
             xQueryValues.Add(ROWSGXID);
-            xQuery = xBase + "S1medico";
+            xQuery = xBase + "S1";
             profesionalesData = DB.ExecuteAdapter(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure);
         }
         catch (Exception ex)
@@ -880,7 +880,7 @@
             xQueryValues.Add(ROWSGXID);
             xQueryParameters.Add("@TANDA");
             xQueryValues.Add(TANDA);
-            xQuery = xBase + "SImedico";
+            xQuery = xBase + "SI";
             if (DB.ExecuteNonQuery(xQuery, xQueryParameters, xQueryValues, CommandType.StoredProcedure))
             {
                 await ShowSuccessToast("Profesional guardado exitosamente");
