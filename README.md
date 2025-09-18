@@ -158,6 +158,28 @@ Caso de uso: Ver historial de citas.
 
 Actor Profesional/Médico:
 
+https://ekf3i3.axshare.com/?g=4
+
+<img width="2542" height="1395" alt="image" src="https://github.com/user-attachments/assets/fc71e655-ef3d-488a-a37a-db3d6d7b7beb" />
+<img width="2536" height="1377" alt="image" src="https://github.com/user-attachments/assets/d191fed2-89bb-4bd5-807e-5c1b84e4eb75" />
+<img width="2551" height="1374" alt="image" src="https://github.com/user-attachments/assets/0a84dcbd-3372-4206-a6fd-afb1658b6229" />
+<img width="2539" height="1390" alt="image" src="https://github.com/user-attachments/assets/a4ee786b-f0a8-49a2-a3e6-6c34af83c125" />
+<img width="2554" height="1396" alt="image" src="https://github.com/user-attachments/assets/988d64f4-af12-475f-8ea8-a6e924768abb" />
+<img width="2538" height="1378" alt="image" src="https://github.com/user-attachments/assets/5e600f51-2d3f-4d22-9f7e-123229fb4f11" />
+<img width="2553" height="1395" alt="image" src="https://github.com/user-attachments/assets/853b5063-2411-4f7d-9033-916d7f4c37d1" />
+<img width="2544" height="1387" alt="image" src="https://github.com/user-attachments/assets/80a65fc8-8eee-4643-a21d-d01927c6a3cb" />
+<img width="2545" height="1396" alt="image" src="https://github.com/user-attachments/assets/7e8a3c00-b3e3-4aa2-8adf-179f91100572" />
+<img width="2514" height="1392" alt="image" src="https://github.com/user-attachments/assets/b61aef70-6506-4513-b427-9a0fbab62fb7" />
+
+
+
+
+
+
+
+
+
+
 
 •	Modelo Relacional de la Base de Datos.
 
@@ -241,6 +263,7 @@ Página de Inicio de Sesión: Diseño simple con campos claros para nombre de us
 Vistas de Datos: Las vistas para el historial de citas y los reportes se mostrarán en tablas claras y tendrán filtros y barras de búsqueda para facilitar la recuperación de datos.
 
 
+<img width="1280" height="764" alt="image" src="https://github.com/user-attachments/assets/2f89f92f-bb83-4265-b4ae-b4a4d4071724" />
 
 
 
